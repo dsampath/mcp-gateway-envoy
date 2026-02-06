@@ -28,6 +28,22 @@ curl http://localhost:18080/healthz
 curl http://localhost:18080/readyz
 ```
 
+## ChatGPT Connector Dev Flow
+
+Use the dedicated local MCP stack:
+
+```bash
+docker compose -f deploy/local/chatgpt-compose.yml up --build
+```
+
+This starts:
+- a local MCP server with `search` and `fetch` tools
+- this gateway with payload logging enabled
+- Envoy in front of the gateway
+
+Full setup guide (including tunnel + ChatGPT connector steps):
+- `docs/chatgpt-setup.md`
+
 ## CLI
 
 ```bash

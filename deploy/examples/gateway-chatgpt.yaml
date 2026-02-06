@@ -1,0 +1,23 @@
+apiVersion: mcp.envoy.io/v1alpha1
+kind: GatewayConfig
+gateway:
+  name: mcp-gateway
+  listenAddr: ":8080"
+  adminAddr: ":9090"
+  logLevel: info
+auth:
+  requireAuth: false
+servers:
+  - name: local-chatgpt-mcp
+    transport: http
+    url: http://chatgpt-mcp-server:8000
+routes:
+  - name: mcp-root
+    path: /mcp
+    server: local-chatgpt-mcp
+    auth:
+      type: none
+    policy:
+      timeoutMs: 30000
+      retryCount: 0
+      rateLimitRps: 30

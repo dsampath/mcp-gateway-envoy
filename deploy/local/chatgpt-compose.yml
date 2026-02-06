@@ -1,0 +1,31 @@
+services:
+  chatgpt-mcp-server:
+    build:
+      context: ./chatgpt-mcp-server
+      dockerfile: Dockerfile
+    ports:
+      - "18110:8000"
+
+  gateway:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    command: ["serve", "--file", "/app/gateway.yaml"]
+    environment:
+      - GATEWAY_LOG_BODIES=true
+    depends_on:
+      - chatgpt-mcp-server
+    ports:
+      - "18080:8080"
+    volumes:
+      - ../examples/gateway-chatgpt.yaml:/app/gateway.yaml:ro
+
+  envoy:
+    image: envoyproxy/envoy:v1.33-latest
+    depends_on:
+      - gateway
+    command: ["-c", "/etc/envoy/envoy.yaml"]
+    ports:
+      - "10000:10000"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml:ro
