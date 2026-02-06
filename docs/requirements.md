@@ -14,6 +14,7 @@ Date: 2026-02-06
 - Security default: deny-by-default (`requireAuth: true`).
 - Tenant model: single-tenant in v1; multi-tenant in post-MVP.
 - Transport v1: streamable HTTP + stdio bridge; SSE optional compatibility mode.
+- Architecture evolution reference: see "Current vs Native Reconciler Architecture" in `/Users/djsam/codex/mcp-gateway-envoy/docs/architecture.md`.
 
 ## Personas
 
