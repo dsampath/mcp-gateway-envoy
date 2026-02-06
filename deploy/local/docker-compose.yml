@@ -1,0 +1,28 @@
+services:
+  weather-mcp:
+    image: hashicorp/http-echo:1.0.0
+    command: ["-listen=:8000", "-text={\"server\":\"weather\",\"status\":\"ok\"}"]
+    ports:
+      - "18000:8000"
+
+  gateway:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    command: ["serve", "--file", "/app/gateway.yaml"]
+    depends_on:
+      - weather-mcp
+    ports:
+      - "18080:8080"
+    volumes:
+      - ../examples/gateway.yaml:/app/gateway.yaml:ro
+
+  envoy:
+    image: envoyproxy/envoy:v1.33-latest
+    depends_on:
+      - gateway
+    command: ["-c", "/etc/envoy/envoy.yaml"]
+    ports:
+      - "10000:10000"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml:ro

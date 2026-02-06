@@ -4,24 +4,39 @@ Open-source MCP Gateway built on Envoy/Envoy Gateway, optimized for fast develop
 
 ## Current Status
 
-- `Phase`: Phase 0 foundation in progress
-- `Implemented`: config schema + validation, CLI bootstrap, resource planning skeleton
-- `Next`: runtime wiring to apply generated resources + local compose quickstart
+- `Phase`: Phase 1 runtime baseline
+- `Implemented`: config schema/validation, CLI, runtime HTTP gateway, manifest render/apply, local Envoy compose stack
+- `Next`: Envoy Gateway CRD apply and deeper transport/auth integrations
 
-## Why This Project
+## Quick Start (Local in Minutes)
 
-- Drop-in MCP gateway for local dev and production
-- Minimal setup (`docker compose up` local, Helm on Kubernetes)
-- Secure-by-default routing and auth policy
-- Transport interoperability (HTTP streamable + stdio bridge)
-- Strong operator experience (validation, metrics, traces, health)
+```bash
+cd /Users/djsam/codex/mcp-gateway-envoy
+docker compose -f deploy/local/docker-compose.yml up --build
+```
 
-## Quick Start (Current)
+Test through Envoy (`:10000`):
+
+```bash
+curl -H "Authorization: Bearer dev-token" http://localhost:10000/mcp/weather
+```
+
+Health checks:
+
+```bash
+curl http://localhost:18080/healthz
+curl http://localhost:18080/readyz
+```
+
+## CLI
 
 ```bash
 go run ./cmd/gateway init --output gateway.yaml
 go run ./cmd/gateway validate --file gateway.yaml
 go run ./cmd/gateway plan --file gateway.yaml
+go run ./cmd/gateway render --file gateway.yaml --namespace mcp-gateway --output manifests.yaml
+go run ./cmd/gateway apply --file gateway.yaml --namespace mcp-gateway --dry-run
+go run ./cmd/gateway serve --file gateway.yaml
 ```
 
 ## Repository Layout
@@ -32,11 +47,13 @@ go run ./cmd/gateway plan --file gateway.yaml
 - `docs/roadmap.md`: delivery phases and milestones
 - `cmd/gateway`: CLI entrypoint
 - `internal/config`: config schema, loading, validation, template
-- `internal/controller`: resource plan generation (phase-0)
-- `deploy/examples`: example gateway config
+- `internal/controller`: resource planning + Kubernetes manifest rendering
+- `internal/runtime`: local server runtime + kubectl apply integration
+- `deploy/examples`: sample gateway config
+- `deploy/local`: local Docker Compose + Envoy config
 
 ## Near-term Deliverables
 
-1. Implement runtime reconciler and Envoy Gateway resource apply path.
-2. Ship one-command local deployment profile.
-3. Publish Helm chart and docs for production bootstrap.
+1. Reconciler that applies Envoy Gateway CRDs directly.
+2. stdio bridge runtime process manager.
+3. Helm chart for production bootstrap.
