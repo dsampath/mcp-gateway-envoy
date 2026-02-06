@@ -66,3 +66,36 @@ func TestAPIKeyAuthDenied(t *testing.T) {
 		t.Fatalf("expected 401, got %d", rr.Code)
 	}
 }
+
+func TestTrailingSlashNormalized(t *testing.T) {
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/mcp" {
+			http.NotFound(w, r)
+			return
+		}
+		_, _ = w.Write([]byte("normalized"))
+	}))
+	defer upstream.Close()
+
+	cfg := &config.Config{
+		APIVersion: "mcp.envoy.io/v1alpha1",
+		Kind:       "GatewayConfig",
+		Gateway:    config.Gateway{Name: "gw", ListenAddr: ":0"},
+		Auth:       config.AuthDefaults{RequireAuth: false},
+		Servers:    []config.Server{{Name: "s1", Transport: "http", URL: upstream.URL}},
+		Routes:     []config.Route{{Name: "r1", Path: "/mcp", Server: "s1"}},
+	}
+	s := NewServer(cfg)
+
+	req := httptest.NewRequest(http.MethodGet, "/mcp/", nil)
+	rr := httptest.NewRecorder()
+	s.handleRequest(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rr.Code)
+	}
+	body, _ := io.ReadAll(rr.Body)
+	if string(body) != "normalized" {
+		t.Fatalf("unexpected body: %s", string(body))
+	}
+}

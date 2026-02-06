@@ -64,6 +64,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	normalizeRequestPath(r, route.Path)
 	if err := s.enforceAuth(route, r); err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
@@ -199,6 +200,16 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 		log.Printf("method=%s path=%s duration=%s", r.Method, r.URL.Path, time.Since(start))
 	})
+}
+
+func normalizeRequestPath(r *http.Request, routePath string) {
+	if routePath == "/" {
+		return
+	}
+	// Some clients probe with a trailing slash; upstream MCP endpoints are often strict.
+	if r.URL.Path == routePath+"/" {
+		r.URL.Path = routePath
+	}
 }
 
 func (s *Server) captureRequestBody(r *http.Request) (string, bool) {
